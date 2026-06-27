@@ -1,125 +1,71 @@
-# NipunGPT
+# 🧠 NipunGPT - Agentic AI Chatbot
 
-NipunGPT is a premium, feature-rich agentic chatbot built on top of **FastAPI**, **LangGraph**, and the **Gemini 2.5** suite of models. It is designed to act as an advanced AI assistant similar to ChatGPT, capable of executing complex workflows, accessing long-term memory, performing math calculations, conducting web searches, and running RAG (Retrieval-Augmented Generation) on uploaded documents.
-
----
-
-## 🌟 Key Features
-
-- **Agentic Workflow**: Managed by LangGraph state machines, coordinating chat, memory recall, tool calling, and RAG search.
-- **Dynamic Tool Calling**:
-  - **Tavily Web Search**: Accesses real-time online information for queries about current events.
-  - **Local Memory**: Saves user preferences or facts (`remember_this`) and recalls them in future interactions (`recall_memory`) using SQLAlchemy and SQLite.
-  - **Calculator**: Evaluates math expressions securely.
-  - **Document RAG**: Query uploaded documents (`search_uploaded_documents`).
-- **Comprehensive Document Ingestion**: Supports `.pdf`, `.docx`, `.txt`, `.md`, `.py`, and `.csv` files. Extracted text is split into overlapping chunks, vectorized via `GoogleGenerativeAIEmbeddings` (`gemini-embedding-001`), and stored locally in a Chroma vector database.
-- **Premium Frontend Interface**: Responsive dark-themed UI built with HTML/CSS, offering smooth CSS animations, recent chat lists, persistent thread IDs, speech-to-text dictation, and real-time Server-Sent Events (SSE) streaming.
-- **Enterprise-ready CI/CD & Containerization**: Fully dockerized with a GitHub Actions workflow targeting AWS EC2 deployment via Amazon ECR.
+An advanced, premium-designed AI chatbot powered by **LangGraph** and **Gemini 2.5**. It supports real-time web searches, calculator functions, long-term conversation memory, and RAG document queries.
 
 ---
 
-## 🛠️ Project Architecture
+## 📸 Output Showcase
 
-```mermaid
-graph TD
-    A[Frontend: index.html] <-->|HTTP / SSE Streaming| B[FastAPI Backend: app.py]
-    B <-->|Load / Save History| C[(SQLite DB: chatbot_memory.db)]
-    B -->|Build / Execute Agent| D[LangGraph Agent: agent.py]
-    D <-->|Read / Write Checkpoints| E[(SQLite Checkpointer: langgraph_checkpoints.sqlite)]
-    
-    subgraph Tools
-        D -->|Use Calculator| F[Calculator Tool]
-        D -->|Search Web| G[Tavily Search API]
-        D -->|Long Term Memory| H[SQLAlchemy Memory Helpers]
-        D -->|Query RAG| I[RAG Retrieval Engine]
-    end
+> Add a screenshot or recording of your running chatbot here to showcase the UI!
 
-    B -->|Upload Document| J[Document Loader & Chunking: rag.py]
-    J -->|Generate Embeddings| K[Google AI Embedding API]
-    K -->|Persist Embeddings| L[(Chroma Vector DB)]
-    I <-->|Fetch Chunks| L
+![NipunGPT Screenshot](https://raw.githubusercontent.com/username/repository/main/placeholder-screenshot.png) 
+*(To update, replace this image URL or place a screenshot file in your repository and update the path above, e.g., `![NipunGPT](screenshot.png)`)*
+
+---
+
+## ✨ Features
+
+* **🤖 Smart Agent (LangGraph)**: Automatically decides when to answer directly or when to run tools.
+* **🌐 Web Search (Tavily)**: Searches the internet for up-to-date events.
+* **📂 Document RAG**: Upload `.pdf`, `.docx`, `.txt`, `.md`, `.py`, or `.csv` files and ask questions about them.
+* **🧠 Persistent Memory**: Remembers your preferences and details across sessions.
+* **🧮 Calculator**: Solves math queries instantly.
+* **🎙️ Voice Dictation**: Speech-to-text dictation in the frontend.
+* **🎨 Premium UI**: Beautiful dark-mode interface with streaming responses (SSE).
+
+---
+
+## 🛠️ Tech Stack
+
+* **Frontend**: HTML5, Vanilla CSS3, Javascript (SSE Streaming)
+* **Backend**: FastAPI, Uvicorn
+* **Orchestration**: LangGraph, LangChain
+* **Database**: SQLite (SQLAlchemy), ChromaDB (Vector Store)
+* **LLM**: Gemini 2.5 Flash / Pro (via Google GenAI)
+
+---
+
+## 🚀 Quick Start
+
+### 1. Set Up Environment Variables
+Create a file named `.env` in the root folder:
+```env
+GOOGLE_API_KEY="your-gemini-api-key"
+TAVILY_API_KEY="your-tavily-api-key"
 ```
 
----
+### 2. Run Locally
+* **Windows (PowerShell):**
+  ```powershell
+  .venv\Scripts\Activate.ps1
+  python app.py
+  ```
+* **macOS / Linux:**
+  ```bash
+  source .venv/bin/activate
+  python app.py
+  ```
 
-## 🚀 Getting Started
-
-### 📋 Prerequisites
-
-Ensure you have Python 3.11+ installed.
-
-### 🔧 Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd Nipungpt
-   ```
-
-2. **Create and activate a virtual environment:**
-   * **Windows (PowerShell):**
-     ```powershell
-     python -m venv .venv
-     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
-     .venv\Scripts\Activate.ps1
-     ```
-   * **macOS/Linux:**
-     ```bash
-     python -m venv .venv
-     source .venv/bin/activate
-     ```
-
-3. **Install the dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Set up Environment Variables:**
-   Create a `.env` file in the root directory (or update the existing one):
-   ```env
-   GOOGLE_API_KEY="your-gemini-api-key"
-   TAVILY_API_KEY="your-tavily-api-key"
-   GOOGLE_MODEL="gemini-2.5-flash"
-   ```
+Open **`http://127.0.0.1:8080`** in your browser.
 
 ---
 
-## 💻 Running the Application
+## 🐳 Docker Setup
 
-### Locally
-Start the FastAPI server using the virtual environment's Python interpreter:
 ```bash
-python app.py
+# Build image
+docker build -t nipungpt .
+
+# Run container
+docker run -d -p 8080:8080 --env-file .env nipungpt
 ```
-Or directly via Uvicorn:
-```bash
-uvicorn app:app --host 127.0.0.1 --port 8080 --reload
-```
-Open your browser and navigate to `http://127.0.0.1:8080`.
-
-### Running with Docker
-1. **Build the Docker Image:**
-   ```bash
-   docker build -t nipungpt-app .
-   ```
-2. **Run the Container:**
-   ```bash
-   docker run -d -p 8080:8080 --env-file .env nipungpt-app
-   ```
-
----
-
-## 🛸 CI/CD & Cloud Deployment
-
-This repository includes a GitHub Actions pipeline [`.github/workflows/cicd.yaml`](.github/workflows/cicd.yaml) to continuously deploy updates to an AWS EC2 instance:
-1. Pushes build to **Amazon ECR**.
-2. Deploys to EC2 via a **GitHub Self-Hosted Runner**.
-3. Re-runs the Docker container on port `8080` with the corresponding secrets injected.
-
-Make sure to populate your GitHub repository secrets:
-* `AWS_ACCESS_KEY_ID`
-* `AWS_SECRET_ACCESS_KEY`
-* `AWS_DEFAULT_REGION`
-* `ECR_REPO`
-* `GOOGLE_API_KEY`
-* `TAVILY_API_KEY`

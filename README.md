@@ -6,7 +6,7 @@ NipunGPT is a premium-designed, feature-rich agentic chatbot built on top of **F
 
 ## 📸 Output Showcase
 
-![NipunGPT Screenshot](screenshot.jpg)
+![NipunGPT Screenshot](Screenshot.png)
 
 ---
 

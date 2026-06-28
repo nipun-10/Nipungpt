@@ -6,10 +6,7 @@ NipunGPT is a premium-designed, feature-rich agentic chatbot built on top of **F
 
 ## 📸 Output Showcase
 
-> Place a screenshot or recording of your running chatbot here to showcase the UI!
-
-![NipunGPT Screenshot](https://raw.githubusercontent.com/username/repository/main/placeholder-screenshot.png) 
-*(To update, replace this image URL or place a screenshot file in your repository and update the path above, e.g., `![NipunGPT](screenshot.png)`)*
+![NipunGPT Screenshot](screenshot.jpg)
 
 ---
 

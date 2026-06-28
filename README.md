@@ -130,6 +130,8 @@ The application will be available at: **`http://localhost:8080`**
 
 This project can be deployed continuously to AWS using **GitHub Actions**, **Amazon ECR**, **Amazon EC2**, and a **GitHub Self-Hosted Runner**.
 
+![NipunGPT CI/CD Workflow](cicd-image.png)
+
 ### 1. Create an IAM User
 Create an IAM user for deployment in the AWS Console and attach the following policies:
 * `AmazonEC2ContainerRegistryFullAccess`

@@ -31,8 +31,7 @@ from database import (
     create_or_update_conversation,
     list_conversations)
 
-from rag import add_document_to_rag
-from tools import set_current_thread_id
+from rag import add_document_to_rag, get_uploaded_documents, delete_thread_documents
 
 
 app = FastAPI()
@@ -86,6 +85,21 @@ async def history(thread_id: str):
             }
             for msg in messages
         ]
+    }
+
+
+@app.get("/documents/{thread_id}")
+async def get_documents(thread_id: str):
+    docs = get_uploaded_documents(thread_id)
+    return {"documents": docs}
+
+
+@app.delete("/documents/{thread_id}")
+async def delete_documents(thread_id: str):
+    success = delete_thread_documents(thread_id)
+    return {
+        "success": success,
+        "message": "Documents deleted successfully." if success else "No documents found to delete."
     }
 
 
@@ -238,8 +252,6 @@ async def chat_stream(request: Request):
 
     create_or_update_conversation(thread_id, user_message)
     save_chat_message(thread_id, "user", user_message)
-
-    set_current_thread_id(thread_id)
 
     config = {
         "configurable": {

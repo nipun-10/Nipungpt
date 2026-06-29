@@ -4,17 +4,13 @@ from langchain_core.tools import tool
 from langchain_tavily import TavilySearch
 from database import save_memory, search_memory
 from rag import retrieve_from_rag
+from langchain_core.runnables import RunnableConfig
 
 
 load_dotenv()
 
 
-CURRENT_THREAD_ID = "default"
 
-
-def set_current_thread_id(thread_id: str):
-    global CURRENT_THREAD_ID
-    CURRENT_THREAD_ID = thread_id
 
 
 web_search = TavilySearch(
@@ -51,42 +47,42 @@ def calculator(expression: str) -> str:
 
 
 @tool
-def search_uploaded_documents(query: str) -> str:
+def search_uploaded_documents(query: str, config: RunnableConfig) -> str:
     """
     Search uploaded documents for relevant information.
     Use this when the user asks about uploaded PDFs, DOCX, TXT, notes, files, or documents.
     """
-
+    thread_id = config.get("configurable", {}).get("thread_id", "default")
     return retrieve_from_rag(
         query=query,
-        thread_id=CURRENT_THREAD_ID
+        thread_id=thread_id
     )
 
 
 
 
 @tool
-def remember_this(memory: str) -> str:
+def remember_this(memory: str, config: RunnableConfig) -> str:
     """
     Save an important user preference or fact into long-term memory.
     Use this when the user asks you to remember something.
     """
-
+    thread_id = config.get("configurable", {}).get("thread_id", "default")
     return save_memory(
-        thread_id=CURRENT_THREAD_ID,
+        thread_id=thread_id,
         memory=memory
     )
 
 
 
 @tool
-def recall_memory(query: str) -> str:
+def recall_memory(query: str, config: RunnableConfig) -> str:
     """
     Recall saved long-term memories about the user or this conversation.
     """
-
+    thread_id = config.get("configurable", {}).get("thread_id", "default")
     return search_memory(
-        thread_id=CURRENT_THREAD_ID,
+        thread_id=thread_id,
         query=query
     )
 

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>NipunGPT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
         * {
@@ -448,18 +449,148 @@
                 margin-left: 6px;
             }
         }
+
+        /* Markdown and Code styling */
+        .message-content ul, .message-content ol {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+        .message-content li {
+            margin: 4px 0;
+        }
+        .message-content p {
+            margin: 8px 0;
+        }
+        .message-content h1, .message-content h2, .message-content h3 {
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        .message-content h1 { font-size: 1.4em; }
+        .message-content h2 { font-size: 1.2em; }
+        .message-content h3 { font-size: 1.1em; }
+        
+        pre {
+            position: relative;
+            background: #181818;
+            border-radius: 8px;
+            padding: 34px 16px 12px 16px;
+            overflow-x: auto;
+            border: 1px solid #3a3a3a;
+            margin: 12px 0;
+        }
+        pre code {
+            font-family: 'Fira Code', 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #e5c07b;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #ccc;
+            padding: 3px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .copy-btn:hover {
+            background: #444;
+            color: #fff;
+        }
+        .copy-btn.copied {
+            background: #10a37f;
+            color: #fff;
+            border-color: #10a37f;
+        }
+        .code-lang-label {
+            position: absolute;
+            top: 6px;
+            left: 8px;
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        /* Document Manager styling */
+        .documents-list {
+            max-height: 160px;
+            overflow-y: auto;
+            margin-bottom: 8px;
+            padding-right: 4px;
+        }
+        .document-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: #cfcfcf;
+        }
+        .document-item span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+        .clear-docs-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        .clear-docs-btn:hover {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        /* Sidebar scrollbar style */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
     </style>
 </head>
 
 <body>
 
     <aside class="sidebar">
-        <div class="brand">NipunGPT</div>
+        <div class="brand" style="background: linear-gradient(135deg, #10a37f, #5a4fcf); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">NipunGPT</div>
 
         <button class="new-chat" onclick="newChat()">+ New chat</button>
 
         <div class="history-title">Recent Chats</div>
         <div id="conversationList"></div>
+
+        <div class="history-title" style="margin-top: 20px;">Uploaded Files</div>
+        <div id="documentsList" class="documents-list"></div>
+        <button class="clear-docs-btn" id="clearDocsBtn" onclick="clearDocuments()" style="display: none;">
+            Clear Documents
+        </button>
     </aside>
 
     <main class="main">
@@ -720,6 +851,43 @@
             document.getElementById("fileInput").click();
         }
 
+        function attachCopyButtons(container) {
+            const preElements = container.querySelectorAll("pre");
+            preElements.forEach(pre => {
+                if (pre.querySelector(".copy-btn")) return;
+                pre.style.position = "relative";
+                
+                const codeEl = pre.querySelector("code");
+                if (!codeEl) return;
+
+                const copyBtn = document.createElement("button");
+                copyBtn.className = "copy-btn";
+                copyBtn.textContent = "Copy";
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(codeEl.textContent).then(() => {
+                        copyBtn.textContent = "Copied!";
+                        copyBtn.classList.add("copied");
+                        setTimeout(() => {
+                            copyBtn.textContent = "Copy";
+                            copyBtn.classList.remove("copied");
+                        }, 2000);
+                    });
+                };
+
+                // Add language label if class exists
+                const langClass = Array.from(codeEl.classList).find(c => c.startsWith("language-"));
+                if (langClass) {
+                    const lang = langClass.replace("language-", "");
+                    const langLabel = document.createElement("span");
+                    langLabel.className = "code-lang-label";
+                    langLabel.textContent = lang;
+                    pre.appendChild(langLabel);
+                }
+
+                pre.appendChild(copyBtn);
+            });
+        }
+
         function addMessage(role, content = "") {
             hideWelcome();
 
@@ -737,7 +905,14 @@
 
             const messageContent = document.createElement("div");
             messageContent.className = "message-content";
-            messageContent.textContent = content;
+            
+            if (role === "assistant" && typeof marked !== "undefined") {
+                messageContent.dataset.rawText = content;
+                messageContent.innerHTML = marked.parse(content);
+                attachCopyButtons(messageContent);
+            } else {
+                messageContent.textContent = content;
+            }
 
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(messageContent);
@@ -853,6 +1028,8 @@
         async function loadConversation(selectedThreadId) {
             threadId = selectedThreadId;
             localStorage.setItem("thread_id", threadId);
+
+            await loadUploadedDocuments();
 
             try {
                 const response = await fetch(`/history/${threadId}`);
@@ -978,7 +1155,9 @@
                         statusText.textContent = `Generating with ${selectedModel}...`;
                     }
 
-                    botElement.textContent += data.token;
+                    botElement.dataset.rawText = (botElement.dataset.rawText || "") + data.token;
+                    botElement.innerHTML = marked.parse(botElement.dataset.rawText);
+                    attachCopyButtons(botElement);
                     chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
 
@@ -987,7 +1166,9 @@
                         completeToolProgress(toolProgress, likelyTool);
                     }
 
-                    botElement.textContent += "\n\nError: " + data.error;
+                    botElement.dataset.rawText = (botElement.dataset.rawText || "") + "\n\nError: " + data.error;
+                    botElement.innerHTML = marked.parse(botElement.dataset.rawText);
+                    attachCopyButtons(botElement);
                     statusText.textContent = "Ready";
                     chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
@@ -1122,6 +1303,7 @@
                     );
 
                     await loadConversations();
+                    await loadUploadedDocuments();
                 } else {
                     addMessage("assistant", "Upload failed: " + data.message);
                 }
@@ -1135,6 +1317,65 @@
             fileInput.value = "";
         }
 
+        async function loadUploadedDocuments() {
+            const docsList = document.getElementById("documentsList");
+            const clearBtn = document.getElementById("clearDocsBtn");
+            if (!docsList) return;
+
+            try {
+                const response = await fetch(`/documents/${threadId}`);
+                const data = await response.json();
+
+                docsList.innerHTML = "";
+
+                if (!data.documents || data.documents.length === 0) {
+                    docsList.innerHTML = `<div style="font-size: 12px; color: #777; padding: 4px;">No files uploaded</div>`;
+                    if (clearBtn) clearBtn.style.display = "none";
+                    return;
+                }
+
+                data.documents.forEach(docName => {
+                    const item = document.createElement("div");
+                    item.className = "document-item";
+
+                    const nameSpan = document.createElement("span");
+                    nameSpan.textContent = docName;
+                    nameSpan.title = docName;
+
+                    item.appendChild(nameSpan);
+                    docsList.appendChild(item);
+                });
+
+                if (clearBtn) clearBtn.style.display = "block";
+
+            } catch (error) {
+                console.error("Failed to load thread documents:", error);
+            }
+        }
+
+        async function clearDocuments() {
+            if (!confirm("Are you sure you want to delete all uploaded documents for this chat thread? This will clear them from the AI's document memory.")) {
+                return;
+            }
+            statusText.textContent = "Clearing documents...";
+            try {
+                const response = await fetch(`/documents/${threadId}`, {
+                    method: "DELETE"
+                });
+                const data = await response.json();
+                if (data.success) {
+                    addMessage("assistant", "All documents cleared from this conversation thread.");
+                } else {
+                    alert("Failed to clear documents: " + data.message);
+                }
+            } catch (error) {
+                console.error("Error clearing documents:", error);
+            } finally {
+                statusText.textContent = "Ready";
+                await loadUploadedDocuments();
+            }
+        }
+
         async function newChat() {
             threadId = crypto.randomUUID();
             localStorage.setItem("thread_id", threadId);
@@ -1145,10 +1386,12 @@
 
             renderWelcome();
             await loadConversations();
+            await loadUploadedDocuments();
             messageInput.focus();
         }
 
         loadConversations();
+        loadUploadedDocuments();
 
         if (threadId) {
             loadConversation(threadId);

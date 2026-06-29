@@ -65,16 +65,21 @@ Nipungpt/
 ### 1. The Frontend (Client Side)
 * Communicates with FastAPI endpoints using `fetch` (for uploads/history) and standard HTTP requests.
 * Implements **SSE (Server-Sent Events)** to stream chatbot replies word-by-word.
+* Parses responses dynamically with **Marked.js** to render headings, lists, links, and text formatting.
+* Automatically creates copy buttons and language indicators for code blocks inside responses.
+* Displays a real-time list of uploaded files for the active chat session in the sidebar, including a one-click option to clear them.
 * Utilizes CSS micro-animations to indicate when a tool (e.g. Web Search or Calculator) is actively processing.
 * Built-in browser-native **SpeechRecognition** for voice dictation.
 
 ### 2. The Backend Routing (`app.py`)
 * Serves the HTML frontend and processes user queries, document uploads, and thread histories.
 * Handles file uploads, stores them securely in `uploads/`, calls `add_document_to_rag` to chunk text, and updates the vector database.
+* Exposes `GET /documents/{thread_id}` and `DELETE /documents/{thread_id}` endpoints to list and delete files index-linked to the thread's Chroma database entries.
 * Converts LangGraph messages to an SSE generator payload using custom filters to prevent raw JSON/tool calls from rendering to the user.
 
-### 3. The Orchestration Layer (`agent.py`)
+### 3. The Orchestration Layer (`agent.py` & `tools.py`)
 * Standardizes on a unified System Prompt instructing the agent to choose tools intelligently based on user intent.
+* Avoids multi-user concurrency bugs by using LangChain's native `RunnableConfig` rather than global state variables to pass `thread_id` to the tools.
 * Compiles a LangGraph `StateGraph` containing `chatbot` and `tools` nodes.
 * Connects a `SqliteSaver` to automatically handle thread checkpointing.
 

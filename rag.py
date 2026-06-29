@@ -112,3 +112,36 @@ def retrieve_from_rag(query: str, thread_id: str, k: int = 4) -> str:
         )
 
     return "\n\n".join(results)
+
+
+def get_uploaded_documents(thread_id: str) -> list[str]:
+    """
+    Get the list of unique filenames uploaded to a specific thread.
+    """
+    try:
+        res = vectorstore.get(where={"thread_id": thread_id})
+        metadatas = res.get("metadatas", []) or []
+        sources = set()
+        for meta in metadatas:
+            if meta and "source" in meta:
+                sources.add(meta["source"])
+        return sorted(list(sources))
+    except Exception as e:
+        print(f"Error fetching uploaded documents: {e}")
+        return []
+
+
+def delete_thread_documents(thread_id: str) -> bool:
+    """
+    Delete all documents (and vector chunks) uploaded to a specific thread.
+    """
+    try:
+        res = vectorstore.get(where={"thread_id": thread_id})
+        ids = res.get("ids", []) or []
+        if ids:
+            vectorstore.delete(ids=ids)
+            return True
+        return False
+    except Exception as e:
+        print(f"Error deleting thread documents: {e}")
+        return False
